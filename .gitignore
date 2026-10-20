@@ -1,0 +1,4 @@
+# Собранный сайт — его делает tools/build.js (локально и в GitHub Actions)
+_site/
+.DS_Store
+node_modules/

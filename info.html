@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Обо мне — Михаил Никулин</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&display=swap">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <script src="assets/js/preloader.js"></script>
+  <header data-header></header>
+
+  <main class="wrap">
+    <!-- Две колонки, как на странице кейса: служебная 1–4 | контент 5–12 -->
+    <div class="info grid">
+      <div class="col info__about" style="--ds:5;--d:5;--ts:3;--t:6;--m:4">
+        <figure class="col photo" style="--d:2;--t:2;--m:2" data-photo></figure>
+        <p class="col" style="--d:5;--t:6;--m:4" data-bio></p>
+      </div>
+
+      <p class="col muted info__label" style="--ds:1;--d:4;--ts:1;--t:2;--m:4">Опыт</p>
+      <ul class="col list" style="--ds:5;--d:8;--ts:3;--t:6;--m:4">
+        <li><span>2024 — сейчас</span><span>Студия</span><span class="muted">Ведущий дизайнер</span></li>
+        <li><span>2021 — 2024</span><span>Компания</span><span class="muted">Продуктовый дизайнер</span></li>
+      </ul>
+
+      <p class="col muted info__label" style="--ds:1;--d:4;--ts:1;--t:2;--m:4">Контакты</p>
+      <ul class="col" style="--ds:5;--d:8;--ts:3;--t:6;--m:4" data-contacts></ul>
+    </div>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/common.js"></script>
+  <script>
+    U.header({ page: "info" });
+    const S = window.SITE;
+    document.querySelector("[data-bio]").textContent = S.bio;
+
+    // Фото: высота кратна модулю, как у всех картинок сайта.
+    // Второе фото лежит поверх первого и проявляется при наведении; без наведения (телефон) — по тапу.
+    const photo = document.querySelector("[data-photo]");
+    if (S.photo?.src) {
+      photo.innerHTML =
+        (S.photo.hover ? `<img class="photo__alt" src="${U.esc(S.photo.hover)}" alt="" aria-hidden="true" decoding="async">` : "") +
+        U.media({ ...S.photo, alt: S.name });
+      if (S.photo.hover && matchMedia("(hover: none)").matches) photo.addEventListener("click", () => photo.classList.toggle("is-alt"));
+    } else photo.remove();
+    const info = document.querySelector(".info");
+    const relayout = () => U.snap(info);
+    relayout();
+    U.onMediaReady(info, relayout);
+    addEventListener("resize", () => requestAnimationFrame(relayout));
+    document.querySelector("[data-contacts]").innerHTML =
+      `<li><a href="mailto:${U.esc(S.email)}">${U.esc(S.email)}</a></li>` +
+      S.links.map((l) => `<li><a href="${U.esc(l.href)}" target="_blank" rel="noopener">${U.esc(l.label)}</a></li>`).join("");
+  </script>
+</body>
+</html>

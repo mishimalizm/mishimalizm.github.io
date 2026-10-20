@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Михаил Никулин — дизайнер</title>
+  <meta name="description" content="Портфолио: веб, мобильные приложения, графический дизайн.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&display=swap">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <script src="assets/js/preloader.js"></script>
+  <header data-header></header>
+
+  <!-- Работы начинаются с середины экрана (см. .home в style.css) -->
+  <main class="wrap home">
+    <!-- Визуальная сетка: от картинки к деталям -->
+    <section class="view" data-view-panel="grid" aria-label="Работы">
+      <div class="works grid" data-works></div>
+    </section>
+
+    <!-- По годам: календарь, продуктовые кейсы на таймлайне -->
+    <section class="view" data-view-panel="calendar" aria-label="Работы по годам" hidden>
+      <div class="latest grid rule" data-latest></div>
+      <div data-calendar></div>
+    </section>
+  </main>
+
+  <div class="peek" data-peek aria-hidden="true"></div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/common.js"></script>
+  <script src="assets/js/index.js"></script>
+</body>
+</html>

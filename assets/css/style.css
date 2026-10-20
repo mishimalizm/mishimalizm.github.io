@@ -1,0 +1,356 @@
+/* =========================================================
+   ТОКЕНЫ
+   Модульная сетка: колонки 12 / 8 / 4 + вертикальный модуль --u.
+   - ширины — целые колонки;
+   - отступы и высоты — кратные --u (текст, линии, блоки);
+   - высоты картинок JS округляет до модуля (см. U.snap в common.js).
+   ========================================================= */
+:root {
+  --font: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  /* Шрифт: одно начертание (400), два размера */
+  --fs-1: 14px;   /* весь текст сайта */
+  --fs-2: 28px;   /* заголовок проекта */
+
+  --u: 20px;      /* модуль = высота строки основного текста */
+  --lh-1: var(--u);
+  --lh-2: calc(var(--u) * 2);
+
+  --cols: 12;
+  --gutter: 20px;
+  --margin: 20px;
+  --header-h: 0px;     /* JS: высота липкой шапки (0 — если не липкая) */
+  --header-full: 60px; /* JS: полная высота шапки */
+
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #8c8c8c;
+  --line: #e6e6e6;
+  --tint: #f2f2f2;
+  --grid-col: rgba(255, 0, 0, .06);
+  --grid-row: rgba(255, 0, 0, .16);
+}
+
+/* Планшет 640–1023: 8 колонок */
+@media (max-width: 1023px) {
+  :root { --cols: 8; }
+}
+/* Мобильный < 640: 4 колонки */
+@media (max-width: 639px) {
+  :root { --cols: 4; --gutter: 16px; --margin: 16px; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f0f0f; --fg: #e9e9e9; --muted: #7d7d7d; --line: #262626; --tint: #1b1b1b;
+    --grid-col: rgba(255, 80, 80, .08); --grid-row: rgba(255, 80, 80, .2);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f0f0f; --fg: #e9e9e9; --muted: #7d7d7d; --line: #262626; --tint: #1b1b1b;
+  --grid-col: rgba(255, 80, 80, .08); --grid-row: rgba(255, 80, 80, .2);
+}
+
+/* =========================================================
+   БАЗА
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  position: relative;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-weight: 400;
+  font-size: var(--fs-1);
+  line-height: var(--lh-1);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p, ul, ol, li, figure, figcaption, dl, dt, dd { margin: 0; padding: 0; font: inherit; }
+ul, ol { list-style: none; }
+img, video { display: block; width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+button { font: inherit; color: inherit; text-transform: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }  /* регистр — как у окружения: браузер по умолчанию его сбрасывает */
+.muted { color: var(--muted); }
+
+/* Линии: inset-тень вместо border, чтобы не сдвигать ритм на 1px */
+.rule      { box-shadow: inset 0 1px 0 var(--fg); }
+.rule-soft { box-shadow: inset 0 1px 0 var(--line); }
+
+/* =========================================================
+   МОДУЛЬНАЯ СЕТКА
+   .grid — контейнер на всю ширину колонок.
+   .col  — ячейка. Ширина: --d / --t / --m (десктоп / планшет / мобильный),
+           старт: --ds / --ts / --ms (по умолчанию — следующая свободная).
+   .row  — ряд на всю ширину, наследует колонки родителя (subgrid).
+   <div class="col" style="--d:6;--ds:4;--t:6;--m:4">
+   ========================================================= */
+.wrap { padding-inline: var(--margin); }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gutter);
+}
+.col {
+  --_w: var(--d, var(--cols));
+  --_s: var(--ds, auto);
+  grid-column: var(--_s) / span var(--_w);
+  min-width: 0;
+}
+@media (max-width: 1023px) {
+  .col { --_w: var(--t, var(--cols)); --_s: var(--ts, auto); }
+}
+@media (max-width: 639px) {
+  .col { --_w: var(--m, var(--cols)); --_s: var(--ms, auto); }
+}
+.row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
+/* Ширина и старт ячейки не наследуются её содержимым:
+   вложенная .col без своего --ds начинает с первой свободной колонки */
+.col > * { --d: initial; --ds: initial; --t: initial; --ts: initial; --m: initial; --ms: initial; }
+
+/* Оверлей сетки — клавиша G */
+.grid-overlay {
+  position: absolute; inset: 0; z-index: 1000;
+  display: none; pointer-events: none;
+  padding-inline: var(--margin);
+  background-image: linear-gradient(to bottom, var(--grid-row) 1px, transparent 1px);
+  background-size: 100% var(--u);
+}
+.grid-overlay > i { background: var(--grid-col); }
+html.show-grid .grid-overlay { display: grid; }
+@media (max-width: 1023px) { .grid-overlay > i:nth-child(n + 9) { display: none; } }
+@media (max-width: 639px)  { .grid-overlay > i:nth-child(n + 5) { display: none; } }
+
+/* =========================================================
+   ШАПКА — одна строка: имя | разделы | отображение
+   Десктоп: Михаил Никулин 1–4 | Сетка, Календарь, Инфо с колонки 5 | − +, ◐ у правого края 11–12
+   Планшет: 1–2 | 3–6 | 7–8
+   Мобильный: «Михаил Никулин … − + ◐» / разделы
+   ========================================================= */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--bg);
+  padding-block: var(--u);
+  row-gap: var(--u);
+}
+/* Разделитель прибит к шапке и при прокрутке остаётся под ней.
+   Идёт по полям, как остальные линии, и не меняет высоту шапки. */
+.header::after {
+  content: ""; position: absolute; left: var(--margin); right: var(--margin); bottom: -1px;
+  height: 1px; background: var(--fg); pointer-events: none;
+}
+.header__nav { display: flex; flex-wrap: wrap; align-items: center; column-gap: 2ch; }
+.header__tools { display: flex; justify-content: flex-end; align-items: center; column-gap: 2ch; }
+.header__zoom { display: flex; gap: 4px; }
+/* Навигация — капсом, чтобы отделялась от текста (тексты в данных — обычные) */
+.header__nav, .caps, .p-back { text-transform: uppercase; }
+.header__zoom[hidden] { display: none; }
+
+/* Кнопка-знак (− + ◐): квадрат 20×20 = модуль */
+.icon { display: inline-grid; place-items: center; width: var(--u); height: var(--u); }
+@media (max-width: 639px) {
+  .header { position: relative; }  /* не липкая, но держит разделитель */
+  .header__tools { grid-row: 1; }  /* − + ◐ — в первой строке, рядом с именем */
+}
+
+.btn[aria-pressed="true"], .is-active { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.btn[aria-pressed="false"] { color: var(--muted); }
+.btn:hover { color: var(--fg); }
+.btn:disabled { color: var(--line); cursor: default; }
+:focus-visible { outline: 1px solid currentColor; outline-offset: 2px; }
+
+/* =========================================================
+   ГЛАВНАЯ — ПЕРВЫЙ ЭКРАН
+   Работы начинаются с середины экрана, округлённой вниз до модуля,
+   чтобы не сбить ритм.
+   ========================================================= */
+.home {
+  padding-top: calc(50vh - var(--header-full));
+  padding-top: calc(round(down, 50svh, var(--u)) - var(--header-full));
+}
+
+/* =========================================================
+   ГЛАВНАЯ — КАЛЕНДАРЬ
+   Десктоп:   год 1–2 | месяц 3–4 | проект 5–8 | тип 9 | клиент 10–11 | срок 12
+   Планшет:   год — строкой | месяц 1 | проект 2–4 | тип 5 | клиент 6–7 | срок 8
+   Мобильный: год — строкой | месяц 1 | проект 2–4, ниже «клиент · тип · срок»
+   ========================================================= */
+.view { padding-bottom: calc(var(--u) * 4); }
+.view[hidden] { display: none; }
+
+.latest { padding-block: var(--u); }
+
+.cal-year__label { position: sticky; top: var(--header-h); align-self: start; padding-top: var(--u); }
+.cal-months { padding-top: var(--u); }
+.cal-months, .cal-month, .cal-month__items, .cal-item { display: grid; grid-template-columns: subgrid; }
+.cal-month { grid-column: 1 / -1; }
+.cal-month:first-child { box-shadow: none; }
+
+.cal-month__label { position: relative; color: var(--muted); }
+.cal-month.has-items .cal-month__label { color: var(--fg); }
+/* Наведение на проект: вертикальная линия по всем его месяцам */
+.cal-month.is-span .cal-month__label { color: var(--fg); }
+.cal-month.is-span .cal-month__label::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--gutter) / -2);
+  border-left: 1px solid var(--fg);
+}
+
+.cal-item { grid-column: 1 / -1; }
+.cal-item:hover { background: var(--tint); }
+.cal-item__team { color: var(--muted); margin-left: .5ch; cursor: help; }
+.cal-item__term { text-align: right; }
+
+.m-only { display: none; }
+
+@media (max-width: 1023px) {
+  .cal-year__label { position: static; }
+}
+@media (max-width: 639px) {
+  .m-only { display: inline; }
+  .cal-item__type, .cal-item__term { display: none; }
+  .cal-item__client { color: var(--muted); }
+}
+
+/* Превью обложки у курсора: 3 колонки */
+.peek {
+  position: fixed; left: 0; top: 0; z-index: 100; pointer-events: none;
+  width: calc((100vw - var(--margin) * 2 - var(--gutter) * 11) / 12 * 3 + var(--gutter) * 2);
+  opacity: 0; transition: opacity .12s;
+}
+.peek.is-on { opacity: 1; }
+@media (hover: none), (max-width: 1023px) { .peek { display: none; } }
+
+/* =========================================================
+   ГЛАВНАЯ — ВИЗУАЛЬНАЯ СЕТКА
+   Masonry с шагом рядов = --u: верх каждой карточки на модуле.
+   --span (колонок на карточку) и .no-caption ставит JS по уровню зума.
+   ========================================================= */
+.works {
+  --span: 3;
+  grid-auto-rows: var(--u);
+  grid-auto-flow: row dense;
+  align-items: start;
+}
+.card { --_w: var(--span); padding-bottom: calc(var(--u) * 2); }
+.card.is-wide { --_w: min(calc(var(--span) * 2), var(--cols)); }
+.card a:hover { text-decoration: none; }
+.card a:hover .card__title { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.card__caption { display: flex; justify-content: space-between; gap: 1ch; padding-top: calc(var(--u) / 2); }
+.card__caption .muted { white-space: nowrap; }
+.card__meta { color: var(--muted); }
+.works.no-caption .card__caption, .works.no-caption .card__meta { display: none; }
+.works.no-caption .card { padding-bottom: var(--u); }
+
+/* Медиа и плейсхолдер. Высоту кратно --u выставляет U.snap(). */
+.media { aspect-ratio: var(--ratio, auto); object-fit: cover; background: var(--tint); }
+.ph {
+  width: 100%;
+  aspect-ratio: var(--ratio, 4 / 3);
+  background: var(--tint);
+  color: var(--muted);
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+
+/* =========================================================
+   ВНУТРЕННЯЯ — ЛОНГРИД: осевая композиция
+   Ось — промежуток между служебной колонкой и контентом: 4|5 на десктопе, 2|3 на планшете.
+   Слева от оси всё заканчивается на ней и выровнено вправо: метки, ключи меты, подписи,
+   маленькие картинки. Справа всё начинается от неё: заголовок, текст 5–9, картинки
+   по шкале 2–3–5–8 колонок (12 — на всю ширину). На мобильном оси нет: всё влево.
+   ========================================================= */
+.p-head { padding-block: var(--u) calc(var(--u) * 3); row-gap: var(--u); }
+.p-title { font-size: var(--fs-2); line-height: var(--lh-2); }
+.p-meta { margin-top: var(--u); }
+.p-meta dt { color: var(--muted); }
+.p-meta dd a { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+.p-body { row-gap: calc(var(--u) * 3); padding-bottom: calc(var(--u) * 4); }
+.block { row-gap: var(--u); align-items: start; }
+.block__label { color: var(--muted); }
+.block__text p + p { margin-top: var(--u); }
+.block figcaption, .m-note { color: var(--muted); }
+.block figcaption { padding-top: calc(var(--u) / 2); }
+
+/* Ряд картинок: [слева от оси] [группа справа от оси, переносится от оси] [подпись на поле] */
+.m-group { display: grid; grid-template-columns: subgrid; row-gap: var(--u); align-items: start; }
+.m-note { align-self: end; }
+/* На всю ширину: картинка 1–12, подпись под ней — у оси */
+.m-full { row-gap: 0; }
+.m-full > .media, .m-full > .ph { grid-column: 1 / -1; }
+.m-full > figcaption { grid-column: 1 / span 4; }
+
+.p-next { padding-block: var(--u) calc(var(--u) * 4); row-gap: var(--u); }
+
+/* Десктоп и планшет: всё слева от оси прижато к ней */
+@media (min-width: 640px) {
+  .p-meta dt, .block__label, .p-back, .m-note,
+  .m-left figcaption, .block__aside figcaption, .m-full > figcaption { text-align: right; }
+  .m-left, .m-group, .m-note { grid-row: 1; }
+  .block--aside .block__text { grid-row: 1 / span 2; }
+  .block__aside { grid-row: 2; }
+}
+@media (max-width: 1023px) { .m-full > figcaption { grid-column: 1 / span 2; } }
+@media (max-width: 639px) {
+  .m-full > figcaption { grid-column: 1 / -1; }
+  /* Оси нет: левая картинка и группа идут одним потоком (по 2 в ряд), без пустых половинок */
+  .m-group { display: contents; }
+}
+
+/* =========================================================
+   ИНФО
+   ========================================================= */
+.info { padding-block: var(--u) calc(var(--u) * 4); row-gap: calc(var(--u) * 2); }
+.info .col > p + p { margin-top: var(--u); }  /* абзацы внутри текстового блока, не соседние ячейки сетки */
+/* Опыт: компактная таблица от оси — колонки по содержимому, между ними 2 знака (как в навигации) */
+.info .list { display: grid; grid-template-columns: max-content max-content 1fr; column-gap: 2ch; }
+.info .list > li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
+@media (max-width: 639px) {
+  .info .list { grid-template-columns: max-content 1fr; row-gap: var(--u); }  /* годы — строкой, ниже компания и роль */
+  .info .list > li > :first-child { grid-column: 1 / -1; }
+}
+/* «Обо мне»: фото (2 колонки) над био, внутри колонки контента.
+   Второе фото (.photo__alt) лежит поверх и проявляется при наведении, на телефоне — по тапу (.is-alt). */
+.photo { position: relative; }
+.photo__alt {
+  position: absolute; inset: 0; z-index: 1;
+  width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; pointer-events: none;
+}
+@media (hover: hover) { .photo:hover .photo__alt { opacity: 1; } }
+.photo.is-alt .photo__alt { opacity: 1; }
+.info__about { display: grid; grid-template-columns: subgrid; row-gap: var(--u); align-items: start; }
+/* На мобильном подпись стоит над содержимым: ближе к своему разделу, чем к соседнему */
+@media (max-width: 639px) { .info__label { margin-bottom: calc(var(--u) * -1); } }
+/* Заголовки разделов — у оси, как метки в кейсе */
+@media (min-width: 640px) { .info__label { text-align: right; } }
+
+/* Текст только для скринридеров */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* =========================================================
+   ПРЕЛОАДЕР — ASCII-галоп (assets/js/preloader.js)
+   Лошадь стоит в колонке текста (5–9 / 3–8 / вся ширина), по вертикали — в центре.
+   ASCII — это картинка из знаков, а не текст: размер знака подгоняется,
+   чтобы 100 знаков (60 em) ровно заняли колонку, но не больше 10px.
+   ========================================================= */
+html.is-loading { overflow: hidden; }
+.preloader {
+  position: fixed; inset: 0; z-index: 2000;
+  align-content: center;
+  background: var(--bg); color: var(--fg);
+  transition: opacity .4s ease;
+}
+.preloader.is-done { opacity: 0; pointer-events: none; }
+.preloader__cell { container-type: inline-size; }
+.preloader__art {
+  margin: 0;
+  font-family: var(--font);
+  font-size: min(10px, calc(100cqw / 60));
+  line-height: 1;
+  white-space: pre;
+}
+@media (prefers-reduced-motion: reduce) { .preloader { transition: none; } }
