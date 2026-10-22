@@ -229,7 +229,7 @@ html.show-grid .grid-overlay { display: grid; }
    --span (колонок на карточку) и .no-caption ставит JS по уровню зума.
    ========================================================= */
 .works {
-  --span: 3;
+  --span: 4;   /* до запуска скрипта: 3 в ряд, как в Figma */
   grid-auto-rows: var(--u);
   grid-auto-flow: row dense;
   align-items: start;
