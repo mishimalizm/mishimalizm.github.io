@@ -129,7 +129,9 @@
     8:  [{ span: 1 }, { span: 2, cap: true }, { span: 4, cap: true }, { span: 8, cap: true }],
     4:  [{ span: 1 }, { span: 2, cap: true }, { span: 4, cap: true }]
   };
-  const DEFAULT_LEVEL = { 12: 2, 8: 1, 4: 1 };   // 4 / 4 / 2 карточки в ряду
+  const DEFAULT_LEVEL = { 12: 3, 8: 1, 4: 1 };   // 3 / 4 / 2 карточки в ряду (десктоп — как в Figma)
+  // Ключ сохранённого масштаба. Сменили стандарт на «3 в ряд» — сменили ключ, чтобы старый выбор не перекрывал новый
+  const ZOOM_KEY = "grid-zoom-";
   const zoomMem = {};
 
   const works = document.querySelector("[data-works]");
@@ -142,7 +144,7 @@
   };
   function level(c = cols()) {
     if (zoomMem[c] !== undefined) return zoomMem[c];
-    const raw = store.get("zoom-" + c);
+    const raw = store.get(ZOOM_KEY + c);
     const v = raw === null ? NaN : +raw;
     return Number.isInteger(v) && v >= 0 && v < LEVELS[c].length ? v : DEFAULT_LEVEL[c];
   }
@@ -150,7 +152,7 @@
     const c = cols();
     const i = Math.max(0, Math.min(LEVELS[c].length - 1, level(c) + d));
     zoomMem[c] = i;
-    store.set("zoom-" + c, i);
+    store.set(ZOOM_KEY + c, i);
     applyZoom();
   }
   function applyZoom() {
